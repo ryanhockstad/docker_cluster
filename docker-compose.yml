@@ -1,0 +1,114 @@
+version: '3'
+services:
+
+  node-1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    container_name: node-1
+    environment:
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - cluster.name=${CLUSTER_NAME}
+      - node.name=node-1
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+      - xpack.security.transport.ssl.certificate=${CERTS_DIR}/node-1/node-1.crt
+      - xpack.security.transport.ssl.key=${CERTS_DIR}/node-1/node-1.key
+      - xpack.security.transport.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - xpack.security.http.ssl.certificate=${CERTS_DIR}/node-1/node-1.crt
+      - xpack.security.http.ssl.key=${CERTS_DIR}/node-1/node-1.key
+      - xpack.security.http.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - ${PUBLIC_ELASTIC_PORT}:9200
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./certs:${CERTS_DIR}
+      - local_es1_data:/usr/share/elasticsearch/data
+    networks:
+      - local_esnet
+    healthcheck:
+      test: curl --cacert $CERTS_DIR/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  node-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    container_name: node-2
+    environment:
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - cluster.name=${CLUSTER_NAME}
+      - node.name=node-2
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+      - xpack.security.transport.ssl.certificate=${CERTS_DIR}/node-2/node-2.crt
+      - xpack.security.transport.ssl.key=${CERTS_DIR}/node-2/node-2.key
+      - xpack.security.transport.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - xpack.security.http.ssl.certificate=${CERTS_DIR}/node-2/node-2.crt
+      - xpack.security.http.ssl.key=${CERTS_DIR}/node-2/node-2.key
+      - xpack.security.http.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./certs:${CERTS_DIR}
+      - local_es2_data:/usr/share/elasticsearch/data
+    networks:
+      - local_esnet
+  
+  node-3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    container_name: node-3
+    environment:
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+      - cluster.name=${CLUSTER_NAME}
+      - node.name=node-3
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+      - xpack.security.transport.ssl.certificate=${CERTS_DIR}/node-3/node-3.crt
+      - xpack.security.transport.ssl.key=${CERTS_DIR}/node-3/node-3.key
+      - xpack.security.transport.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - xpack.security.http.ssl.certificate=${CERTS_DIR}/node-3/node-3.crt
+      - xpack.security.http.ssl.key=${CERTS_DIR}/node-3/node-3.key
+      - xpack.security.http.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./certs:${CERTS_DIR}
+    networks:
+      - local_esnet
+
+  kib:
+    image: docker.elastic.co/kibana/kibana:${VER}
+    container_name: kib
+    environment: 
+      # ELASTICSEARCH_USERNAME: elastic
+      # ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: ${CERTS_DIR}/ca.crt
+      ELASTICSEARCH_SSL_CERTIFICATE: ${CERTS_DIR}/kibana/kibana.crt
+      ELASTICSEARCH_SSL_KEY: ${CERTS_DIR}/kibana/kibana.key
+      ELASTICSEARCH_SSL_KEYPASSPHRASE: ${KIBANA_KEY_PASSPHRASE}
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_CERTIFICATE: ${CERTS_DIR}/kibana/kibana.crt
+      SERVER_SSL_KEY: ${CERTS_DIR}/kibana/kibana.key
+      SERVER_SSL_KEYPASSPHRASE: ${KIBANA_KEY_PASSPHRASE}
+    ports:
+      - 5601:5601
+    volumes:
+      - ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./certs:${CERTS_DIR}
+    networks: 
+      - 'local_esnet'
+    depends_on: 
+      - node-1
+      - node-2
+  
+  wait_until_ready:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    command: /usr/bin/true
+    depends_on: {"node-1": {"condition": "service_healthy"}}
+
+volumes:
+  local_es1_data:
+  local_es2_data:
+networks:
+  local_esnet:
+    external: true

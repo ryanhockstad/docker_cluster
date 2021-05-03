@@ -1,0 +1,16 @@
+elasticsearch:
+  hosts: ["https://node-1:9200", "https://node-2:9200"]
+  ssl:
+    verificationMode: full
+    # keyPassphrase: password
+    # certificateAuthorities: [/usr/share/elasticsearch/config/certs/ca.crt]
+    # certificate: /usr/share/elasticsearch/config/certs/kibana/kibana.crt
+    # key: /usr/share/elasticsearch/config/certs/kibana/kibana.key
+
+server:
+  name: kibana
+  host: "0"
+  # ssl:
+  #   enabled: true
+  #   certificate:
+  #   key:
