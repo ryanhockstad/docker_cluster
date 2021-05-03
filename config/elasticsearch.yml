@@ -31,3 +31,6 @@ xpack:
             certificate_authorities: [certs/ca.crt]
         native:
           realm2.order: 2
+  license:
+    self_generated:
+      type: trial
