@@ -84,6 +84,7 @@ services:
     volumes:
       - ./config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
       - ./config/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
+      - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./example_data:/usr/share/logstash/logs
       - ./certs:${CERTS_DIR}
     networks:
