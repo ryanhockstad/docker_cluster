@@ -19,8 +19,13 @@ instances:
       - 127.0.0.1
   - name: "kibana"
     dns:
-      - "kib"
-    #   - "localhost"
-    # ip:
-    #   - 127.0.0.1
-    
+      - "kibana"
+      - "localhost"
+    ip:
+      - 127.0.0.1
+  - name: "logstash"
+    dns:
+      - "logstash"
+      - "localhost"
+    ip:
+      - 127.0.0.1

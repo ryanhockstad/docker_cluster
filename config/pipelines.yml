@@ -1,0 +1,2 @@
+- pipeline.id: custom_file
+  path.config: "/usr/share/logstash/custom-pipeline.conf"

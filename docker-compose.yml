@@ -75,13 +75,29 @@ services:
       - ./certs:${CERTS_DIR}
     networks:
       - local_esnet
+  
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${VER}
+    container_name: logstash
+    environment:
+      HTTP_HOST: 0.0.0.0
+    volumes:
+      - ./config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./config/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
+      - ./example_data:/usr/share/logstash/logs
+      - ./certs:${CERTS_DIR}
+    networks:
+      - 'local_esnet'
+    depends_on: 
+      - node-1
+      - node-2
 
   kib:
     image: docker.elastic.co/kibana/kibana:${VER}
-    container_name: kib
+    container_name: kibana
     environment: 
-      # ELASTICSEARCH_USERNAME: elastic
-      # ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
       ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: ${CERTS_DIR}/ca.crt
       ELASTICSEARCH_SSL_CERTIFICATE: ${CERTS_DIR}/kibana/kibana.crt
       ELASTICSEARCH_SSL_KEY: ${CERTS_DIR}/kibana/kibana.key
