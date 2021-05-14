@@ -2,6 +2,7 @@ elasticsearch:
   hosts: ["https://node-1:9200", "https://node-2:9200"]
   ssl:
     verificationMode: full
+    alwaysPresentCertificate: true
     # keyPassphrase: password
     # certificateAuthorities: [/usr/share/elasticsearch/config/certs/ca.crt]
     # certificate: /usr/share/elasticsearch/config/certs/kibana/kibana.crt
@@ -14,3 +15,5 @@ server:
   #   enabled: true
   #   certificate:
   #   key:
+
+enterpriseSearch.host: 'http://enterprise_search:3002'

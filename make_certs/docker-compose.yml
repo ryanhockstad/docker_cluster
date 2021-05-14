@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  create_certs:
+    container_name: create_certs
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    command: ./bindmount/make_certs.sh
+    user: "0"
+    working_dir: /usr/share/elasticsearch
+    volumes: 
+    - 'certs:/certs' 
+    - './instances.yml:/usr/share/elasticsearch/bindmount/instances.yml'
+    - './make_certs.sh:/usr/share/elasticsearch/bindmount/make_certs.sh'
+
+volumes: 
+  certs:

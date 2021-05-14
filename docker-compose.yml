@@ -21,12 +21,12 @@ services:
     volumes:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
-      - ./certs:${CERTS_DIR}
       - local_es1_data:/usr/share/elasticsearch/data
+      - es_certs:${CERTS_DIR}
     networks:
       - local_esnet
     healthcheck:
-      test: curl --cacert $CERTS_DIR/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
       timeout: 10s
       retries: 5
@@ -49,7 +49,7 @@ services:
     volumes:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
-      - ./certs:${CERTS_DIR}
+      - es_certs:${CERTS_DIR}
       - local_es2_data:/usr/share/elasticsearch/data
     networks:
       - local_esnet
@@ -72,10 +72,33 @@ services:
     volumes:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
-      - ./certs:${CERTS_DIR}
+      - es_certs:${CERTS_DIR}
     networks:
       - local_esnet
   
+  enterprise_search:
+    image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
+    container_name: enterprise_search
+    environment:
+      - elasticsearch.host='https://node-1:9200'
+      - elasticsearch.username=elastic
+      - elasticsearch.password=${ELASTIC_PASSWORD}
+      - allow_es_settings_modification=true
+      - secret_management.encryption_keys=[4a2cd3f81d39bf28738c10db0ca782095ffac07279561809eecc722e0c20eb09]
+      - elasticsearch.ssl.enabled=true
+      - elasticsearch.ssl.certificate_authority=/certs/ca/ca.crt
+      - elasticsearch.ssl.certificate=/certs/enterprise_search/enterprise_search.crt
+      - elasticsearch.ssl.key=/certs/enterprise_search/enterprise_search.key
+      - elasticsearch.ssl.key_passphrase=${ENTERPRISE_KEY_PASSPHRASE}
+      - elasticsearch.ssl.verify=true
+    volumes:
+      - es_certs:/certs
+    ports:
+      - 3002:3002
+    networks:
+        - local_esnet
+    restart: on-failure
+
   logstash:
     image: docker.elastic.co/logstash/logstash:${VER}
     container_name: logstash
@@ -86,20 +109,20 @@ services:
       - ./config/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
       - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./example_data:/usr/share/logstash/logs
-      - ./certs:${CERTS_DIR}
+      - es_certs:${CERTS_DIR}
     networks:
       - 'local_esnet'
     depends_on: 
       - node-1
       - node-2
 
-  kib:
+  kibana:
     image: docker.elastic.co/kibana/kibana:${VER}
     container_name: kibana
     environment: 
       ELASTICSEARCH_USERNAME: elastic
       ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
-      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: ${CERTS_DIR}/ca.crt
+      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: ${CERTS_DIR}/ca/ca.crt
       ELASTICSEARCH_SSL_CERTIFICATE: ${CERTS_DIR}/kibana/kibana.crt
       ELASTICSEARCH_SSL_KEY: ${CERTS_DIR}/kibana/kibana.key
       ELASTICSEARCH_SSL_KEYPASSPHRASE: ${KIBANA_KEY_PASSPHRASE}
@@ -111,7 +134,7 @@ services:
       - 5601:5601
     volumes:
       - ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
-      - ./certs:${CERTS_DIR}
+      - es_certs:${CERTS_DIR}
     networks: 
       - 'local_esnet'
     depends_on: 
@@ -126,6 +149,8 @@ services:
 volumes:
   local_es1_data:
   local_es2_data:
+  es_certs:
+    external: true
 networks:
   local_esnet:
     external: true
