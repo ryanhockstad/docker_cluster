@@ -22,6 +22,6 @@ docker cp node-1:/usr/share/elasticsearch/config/certs/ca/ca.crt .
 
 curl -u enterprise_search:$enterprise_password --cacert ./ca.crt -XPOST \
 https://localhost:9200/_security/user/enterprise_search/_password \
--H 'Content-Type: application/json' -d '{"password" : "password"}'
+-H 'Content-Type: application/json' -d '{"password" : "changeme"}'
 
 rm ./ca.crt

@@ -22,7 +22,7 @@ services:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
       - local_es1_data:/usr/share/elasticsearch/data
-      - es_certs:${CERTS_DIR}
+      - certs:${CERTS_DIR}
     networks:
       - local_esnet
     healthcheck:
@@ -49,7 +49,7 @@ services:
     volumes:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
-      - es_certs:${CERTS_DIR}
+      - certs:${CERTS_DIR}
       - local_es2_data:/usr/share/elasticsearch/data
     networks:
       - local_esnet
@@ -72,7 +72,7 @@ services:
     volumes:
       - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
-      - es_certs:${CERTS_DIR}
+      - certs:${CERTS_DIR}
     networks:
       - local_esnet
   
@@ -80,6 +80,9 @@ services:
     image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
     container_name: enterprise_search
     environment:
+      - ent_search.external_url=http://${ENTERPRISE_IP}:${ENTERPRISE_PORT}
+      - ent_search.listen_host=0.0.0.0
+      - ent_search.listen_port=${ENTERPRISE_PORT}
       - elasticsearch.host='https://node-1:9200'
       - elasticsearch.username=elastic
       - elasticsearch.password=${ELASTIC_PASSWORD}
@@ -91,8 +94,9 @@ services:
       - elasticsearch.ssl.key=/certs/enterprise_search/enterprise_search.key
       - elasticsearch.ssl.key_passphrase=${ENTERPRISE_KEY_PASSPHRASE}
       - elasticsearch.ssl.verify=true
+      - ent_search.auth.native1.source=standard
     volumes:
-      - es_certs:/certs
+      - certs:/certs
     ports:
       - 3002:3002
     networks:
@@ -109,7 +113,7 @@ services:
       - ./config/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
       - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./example_data:/usr/share/logstash/logs
-      - es_certs:${CERTS_DIR}
+      - certs:${CERTS_DIR}
     networks:
       - 'local_esnet'
     depends_on: 
@@ -134,7 +138,7 @@ services:
       - 5601:5601
     volumes:
       - ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
-      - es_certs:${CERTS_DIR}
+      - certs:${CERTS_DIR}
     networks: 
       - 'local_esnet'
     depends_on: 
@@ -149,8 +153,7 @@ services:
 volumes:
   local_es1_data:
   local_es2_data:
-  es_certs:
-    external: true
+  certs:
 networks:
   local_esnet:
     external: true
