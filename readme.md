@@ -12,6 +12,7 @@ How to get this stuff running:
  Step 2: There are no more steps.
 
  Step 3: Log in to kibana (with https), type 'thisisunsafe' because the ca authority isn't trusted by your browser.
+ 
  Step 4: log in with user 'enterprise_search' and password 'password' if you want to play with enterprise search
         Otherwise, log in with user 'elastaic' adn password 'password'
 
