@@ -1,2 +1,3 @@
 example_data/sincedb
+example_data/data/*
 .env

@@ -15,5 +15,6 @@ server:
   #   enabled: true
   #   certificate:
   #   key:
+  #   keyPassphrase:
 
 enterpriseSearch.host: 'http://enterprise_search:3002'

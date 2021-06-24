@@ -19,8 +19,8 @@ services:
     ports:
       - ${PUBLIC_ELASTIC_PORT}:9200
     volumes:
-      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/elasticsearch/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
       - local_es1_data:/usr/share/elasticsearch/data
       - certs:${CERTS_DIR}
     networks:
@@ -47,8 +47,8 @@ services:
       - xpack.security.http.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     volumes:
-      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/elasticsearch/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
       - certs:${CERTS_DIR}
       - local_es2_data:/usr/share/elasticsearch/data
     networks:
@@ -70,38 +70,39 @@ services:
       - xpack.security.http.ssl.key_passphrase=${ELASTIC_KEY_PASSPHRASE}
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     volumes:
-      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ./config/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./config/elasticsearch/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
       - certs:${CERTS_DIR}
     networks:
       - local_esnet
   
-  enterprise_search:
-    image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
-    container_name: enterprise_search
-    environment:
-      - ent_search.external_url=http://${ENTERPRISE_IP}:${ENTERPRISE_PORT}
-      - ent_search.listen_host=0.0.0.0
-      - ent_search.listen_port=${ENTERPRISE_PORT}
-      - elasticsearch.host='https://node-1:9200'
-      - elasticsearch.username=elastic
-      - elasticsearch.password=${ELASTIC_PASSWORD}
-      - allow_es_settings_modification=true
-      - secret_management.encryption_keys=[4a2cd3f81d39bf28738c10db0ca782095ffac07279561809eecc722e0c20eb09]
-      - elasticsearch.ssl.enabled=true
-      - elasticsearch.ssl.certificate_authority=/certs/ca/ca.crt
-      - elasticsearch.ssl.certificate=/certs/enterprise_search/enterprise_search.crt
-      - elasticsearch.ssl.key=/certs/enterprise_search/enterprise_search.key
-      - elasticsearch.ssl.key_passphrase=${ENTERPRISE_KEY_PASSPHRASE}
-      - elasticsearch.ssl.verify=true
-      - ent_search.auth.native1.source=standard
-    volumes:
-      - certs:/certs
-    ports:
-      - 3002:3002
-    networks:
-        - local_esnet
-    restart: on-failure
+  # enterprise_search:
+  #   image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
+  #   container_name: enterprise_search
+  #   environment:
+  #     - ENT_SEARCH_DEFAULT_PASSWORD=password
+  #     - ent_search.external_url=http://${ENTERPRISE_IP}:${ENTERPRISE_PORT}
+  #     - ent_search.listen_host=0.0.0.0
+  #     - ent_search.listen_port=${ENTERPRISE_PORT}
+  #     - elasticsearch.host='https://node-1:9200'
+  #     - elasticsearch.username=elastic
+  #     - elasticsearch.password=${ELASTIC_PASSWORD}
+  #     - allow_es_settings_modification=true
+  #     - secret_management.encryption_keys=[4a2cd3f81d39bf28738c10db0ca782095ffac07279561809eecc722e0c20eb09]
+  #     - elasticsearch.ssl.enabled=true
+  #     - elasticsearch.ssl.certificate_authority=/certs/ca/ca.crt
+  #     - elasticsearch.ssl.certificate=/certs/enterprise_search/enterprise_search.crt
+  #     - elasticsearch.ssl.key=/certs/enterprise_search/enterprise_search.key
+  #     - elasticsearch.ssl.key_passphrase=${ENTERPRISE_KEY_PASSPHRASE}
+  #     - elasticsearch.ssl.verify=true
+  #     - ent_search.auth.native1.source=standard
+  #   volumes:
+  #     - certs:/certs
+  #   ports:
+  #     - 3002:3002
+  #   networks:
+  #       - local_esnet
+  #   restart: on-failure
 
   logstash:
     image: docker.elastic.co/logstash/logstash:${VER}
@@ -109,9 +110,9 @@ services:
     environment:
       HTTP_HOST: 0.0.0.0
     volumes:
-      - ./config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
-      - ./config/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
-      - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./config/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./config/logstash/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
+      - ./config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./example_data:/usr/share/logstash/logs
       - certs:${CERTS_DIR}
     networks:
@@ -119,6 +120,28 @@ services:
     depends_on: 
       - node-1
       - node-2
+
+  # I'm only using filebeat to load dashboards, which is why I'm only labeling this filebeat container
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${VER}
+    container_name: filebeat
+    user: root
+    environment:
+      EXAMPLE_ENV_VAR: ${EXAMPLE_PATH}
+    volumes:
+      - ./config/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./config/filebeat/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
+      - ./example_data/data:/usr/share/filebeat/data/
+      - ./example_data:/var/example
+      - nginx_logs:/var/log/nginx:ro
+      # - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:${CERTS_DIR}
+    networks:
+      - 'local_esnet'
+    depends_on: 
+      - wait_until_ready
+    # command: setup --dashboards
 
   kibana:
     image: docker.elastic.co/kibana/kibana:${VER}
@@ -134,10 +157,12 @@ services:
       SERVER_SSL_CERTIFICATE: ${CERTS_DIR}/kibana/kibana.crt
       SERVER_SSL_KEY: ${CERTS_DIR}/kibana/kibana.key
       SERVER_SSL_KEYPASSPHRASE: ${KIBANA_KEY_PASSPHRASE}
+      XPACK_SECURITY_ENABLED: ${XPACK_SECURITY_ENABLED}
+      FAKE: "TEST_VALUE"
     ports:
       - 5601:5601
     volumes:
-      - ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
       - certs:${CERTS_DIR}
     networks: 
       - 'local_esnet'
@@ -150,9 +175,18 @@ services:
     command: /usr/bin/true
     depends_on: {"node-1": {"condition": "service_healthy"}}
 
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports: [8080:80]
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - nginx_logs:/var/log/nginx/
+
 volumes:
   local_es1_data:
   local_es2_data:
+  nginx_logs:
   certs:
 networks:
   local_esnet:

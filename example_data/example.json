@@ -1,0 +1,3 @@
+{"source_ip": "16.61.77.217", "source_port": 17113, "destination_ip": "48.0.0.1", "destination_port": 80, "transport": "tcp"}
+{"source_ip": "16.61.77.218", "source_port": 17113, "destination_ip": "48.0.0.1", "destination_port": 80, "transport": "tcp"}
+{"source_ip": "16.61.77.219", "source_port": 17113, "destination_ip": "48.0.0.1", "destination_port": 80, "transport": "tcp"}

@@ -1,0 +1,97 @@
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/example/*.json
+- type: log
+  paths:
+    - /var/example/*.cef
+  fields:
+    inquest_logs: syslog
+ 
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+# filebeat.autodiscover:
+#   providers:
+#     - type: docker
+#       hints.enabled: true
+#       hints.default_config.enabled: false
+
+setup.kibana: 
+  host: "kibana:5601"
+  protocol: "https"
+  username: "elastic"
+  password: "changeme"
+  ssl.enabled: true
+  ssl.certificate_authorities: ["${EXAMPLE_ENV_VAR}/certs/ca/ca.crt"]
+  ssl.certificate: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.crt"
+  ssl.key: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.key"
+  ssl.key_passphrase: password
+
+
+setup.ilm.enabled: false
+setup.template.enabled: false
+
+output.elasticsearch:
+  hosts: ["node-1:9200"]
+  protocol: "https"
+  username: "elastic"
+  password: "changeme"
+  ssl.certificate_authorities: ["${EXAMPLE_ENV_VAR}/certs/ca/ca.crt"]
+  ssl.certificate: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.crt"
+  ssl.key: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.key"
+  ssl.key_passphrase: password
+
+  index: "filebeat_test"
+  indices: 
+    - index: "filebeat-%{[event.module]}" 
+      when.equals.event.module: "nginx"
+      #when.has_fields: ['event.module'] 
+    - index: "filebeat-test"
+      not.when.has_fields: ['event.module']
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      process_array: false
+      max_depth: 3
+      target: ""
+      overwrite_keys: true
+  - add_fields:
+      target: temp
+      fields:
+        transport: "tcp"
+  - community_id:
+      fields:
+        source_ip: source_ip
+        source_port: source_port
+        destination_ip: destination_ip
+        destination_port: destination_port
+        transport: temp.transport
+      target: network.community_id
+  - drop_fields:
+      fields: ["temp.transport"]
+      ignore_missing: false
+  - rename:
+      when:
+        has_fields: ["fields.inquest_logs"]
+      fields:
+        - {from: "message", to: "event.original"}
+  - decode_cef:
+      when:
+        has_fields: ["fields.inquest_logs"]
+      field: event.original
+  - if:
+      and:
+        - has_fields: ["fields.inquest_logs"]
+        - range:
+            event.severity.gte: 11
+    then:
+      - drop_fields:
+          fields: ["event.severity"]
+      - add_fields:
+          target: "event"
+          fields:
+            severity: 10

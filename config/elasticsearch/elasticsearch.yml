@@ -4,7 +4,8 @@ network:
   host: "0"
 
 cluster.initial_master_nodes: [ "node-1" ]
-
+# fake.settings.do.in.fact.cause.errors: certificate
+# xpack.security.http.ssl.verification_mode: certificate
 xpack:
   security:
     transport:
@@ -24,7 +25,7 @@ xpack:
         # certificate: in docker-compose
         # key: in docker-compose
     authc:
-      # api_key.enabled: true
+      api_key.enabled: true
       realms:
         pki:
           realm1:

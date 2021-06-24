@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# set -o allexport; source .env; set +o allexport
+export $(xargs <.env)
+
 if  ! docker volume ls | grep -q es_certs
 then
   cd make_certs
@@ -7,21 +10,14 @@ then
   cd ..
 fi
 
-docker-compose up -d
 
-while ! docker logs enterprise_search 2>&1 | grep password
-do
-  sleep 5
-  echo 'Waiting on enterprise_search container.'
-done
 
-enterprise_password=$(docker logs enterprise_search 2>&1 | grep password | awk '{print $2}')
-echo $enterprise_password
+docker-compose up -d --remove-orphans
+
 
 docker cp node-1:/usr/share/elasticsearch/config/certs/ca/ca.crt .
-
-curl -u enterprise_search:$enterprise_password --cacert ./ca.crt -XPOST \
-https://localhost:9200/_security/user/enterprise_search/_password \
--H 'Content-Type: application/json' -d '{"password" : "changeme"}'
-
-rm ./ca.crt
+until curl --cacert ./ca.crt -s -u elastic:$ELASTIC_PASSWORD https://localhost:9200
+do
+  sleep 0.1
+done
+rm ca.crt
