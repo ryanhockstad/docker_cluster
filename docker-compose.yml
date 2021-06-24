@@ -76,6 +76,7 @@ services:
     networks:
       - local_esnet
   
+  ## Enterprise search takes a bit to spin up, so I usually leave it commented out.
   # enterprise_search:
   #   image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
   #   container_name: enterprise_search
@@ -121,7 +122,6 @@ services:
       - node-1
       - node-2
 
-  # I'm only using filebeat to load dashboards, which is why I'm only labeling this filebeat container
   filebeat:
     image: docker.elastic.co/beats/filebeat:${VER}
     container_name: filebeat
