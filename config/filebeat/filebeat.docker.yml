@@ -2,11 +2,13 @@ filebeat.inputs:
 - type: log
   paths:
     - /var/example/*.json
+  fields:
+    file_logs: file
 - type: log
   paths:
     - /var/example/*.cef
   fields:
-    inquest_logs: syslog
+    cef_logs: cef
  
 filebeat.config:
   modules:
@@ -44,13 +46,13 @@ output.elasticsearch:
   ssl.key: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.key"
   ssl.key_passphrase: password
 
-  index: "filebeat_test"
   indices: 
     - index: "filebeat-%{[event.module]}" 
       when.equals.event.module: "nginx"
-      #when.has_fields: ['event.module'] 
-    - index: "filebeat-test"
-      not.when.has_fields: ['event.module']
+    - index: "filebeat-log-files"
+      when.has_fields: ['fields.file_logs']
+    - index: "filebeat-cef"
+      when.has_fields: ['fields.cef_logs']
 
 processors:
   - decode_json_fields:
