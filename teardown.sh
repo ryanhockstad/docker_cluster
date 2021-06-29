@@ -1,5 +1,4 @@
 docker-compose down --remove-orphans
-docker container rm create_certs
 
 rm -rf example_data/data
 rm -rf example_data/sincedb

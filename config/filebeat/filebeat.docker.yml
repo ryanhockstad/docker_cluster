@@ -2,6 +2,8 @@ filebeat.inputs:
 - type: log
   paths:
     - /var/example/*.json
+  fields:
+    corelight_logs: file
 - type: log
   paths:
     - /var/example/*.cef
@@ -44,13 +46,14 @@ output.elasticsearch:
   ssl.key: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.key"
   ssl.key_passphrase: password
 
-  index: "filebeat_test"
+  # index: "filebeat_test"
   indices: 
     - index: "filebeat-%{[event.module]}" 
       when.equals.event.module: "nginx"
-      #when.has_fields: ['event.module'] 
-    - index: "filebeat-test"
-      not.when.has_fields: ['event.module']
+    - index: "filebeat-corelight"
+      when.has_fields: ['fields.corelight_logs']
+    - index: "filebeat-inquest"
+      when.has_fields: ['fields.inquest_logs']
 
 processors:
   - decode_json_fields:
