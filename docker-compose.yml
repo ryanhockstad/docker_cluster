@@ -113,6 +113,7 @@ services:
     volumes:
       - ./config/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
       - ./config/logstash/custom-pipeline.conf:/usr/share/logstash/custom-pipeline.conf
+      - ./config/logstash/csv-pipeline.conf:/usr/share/logstash/csv-pipeline.conf
       - ./config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./example_data:/usr/share/logstash/logs
       - certs:${CERTS_DIR}

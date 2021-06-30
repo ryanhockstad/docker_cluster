@@ -3,12 +3,11 @@ filebeat.inputs:
   paths:
     - /var/example/*.json
   fields:
-    file_logs: file
+    json_logs: file
 - type: log
   paths:
     - /var/example/*.cef
   fields:
-    cef_logs: cef
  
 filebeat.config:
   modules:
@@ -46,12 +45,13 @@ output.elasticsearch:
   ssl.key: "/usr/share/elasticsearch/config/certs/filebeat/filebeat.key"
   ssl.key_passphrase: password
 
+  # index: "filebeat_test"
   indices: 
     - index: "filebeat-%{[event.module]}" 
       when.equals.event.module: "nginx"
-    - index: "filebeat-log-files"
-      when.has_fields: ['fields.file_logs']
-    - index: "filebeat-cef"
+    - index: "filebeat-corelight"
+      when.has_fields: ['fields.json_logs']
+    - index: "filebeat-inquest"
       when.has_fields: ['fields.cef_logs']
 
 processors:
@@ -61,6 +61,8 @@ processors:
       max_depth: 3
       target: ""
       overwrite_keys: true
+      when:
+        has_fields: ["fields.json_logs"]
   - add_fields:
       target: temp
       fields:
@@ -78,16 +80,16 @@ processors:
       ignore_missing: false
   - rename:
       when:
-        has_fields: ["fields.inquest_logs"]
+        has_fields: ["fields.cef_logs"]
       fields:
         - {from: "message", to: "event.original"}
   - decode_cef:
       when:
-        has_fields: ["fields.inquest_logs"]
+        has_fields: ["fields.cef_logs"]
       field: event.original
   - if:
       and:
-        - has_fields: ["fields.inquest_logs"]
+        - has_fields: ["fields.cef_logs"]
         - range:
             event.severity.gte: 11
     then:
