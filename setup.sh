@@ -20,4 +20,5 @@ until curl --cacert ./ca.crt -s -u elastic:$ELASTIC_PASSWORD https://localhost:9
 do
   sleep 0.1
 done
+docker-compose -f docker.setup.yml up -d
 rm ca.crt

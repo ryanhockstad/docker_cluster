@@ -1,0 +1,33 @@
+auditbeat.modules:
+  - module: auditd
+    audit_rules: |
+      -w /etc/passwd -p wa -k identity
+      -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+  - module: file_integrity
+    paths:
+      - /bin
+      - /usr/bin
+      - /sbin
+      - /usr/sbin
+      - /etc
+
+output.elasticsearch:
+  hosts: ["https://node-1:9200"]
+  username: elastic
+  password: ${ELASTIC_PASSWORD}
+  ssl:
+    certificate_authorities: ["${CERTS_DIR}/ca/ca.crt"]
+    certificate: ${CERTS_DIR}/auditbeat_setup/auditbeat_setup.crt
+    key: ${CERTS_DIR}/auditbeat_setup/auditbeat_setup.key
+    key_passphrase: ${AUDITBEAT_KEY_PASSPHRASE}
+
+setup:
+  ilm.overwrite: true
+  kibana:
+    host: https://kibana:5601
+    ssl:
+      enabled: true
+      certificate_authorities: ["${CERTS_DIR}/ca/ca.crt"]
+      certificate: ${CERTS_DIR}/auditbeat_setup/auditbeat_setup.crt
+      key: ${CERTS_DIR}/auditbeat_setup/auditbeat_setup.key
+      key_passphrase: ${AUDITBEAT_KEY_PASSPHRASE}

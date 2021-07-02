@@ -144,6 +144,26 @@ services:
       - wait_until_ready
     # command: setup --dashboards
 
+  auditbeat:
+    image: docker.elastic.co/beats/auditbeat:${VER}
+    container_name: auditbeat
+    user: root
+    pid: host
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      CERTS_DIR: ${CERTS_DIR}
+      AUDITBEAT_KEY_PASSPHRASE: ${AUDITBEAT_KEY_PASSPHRASE}
+    volumes:
+      - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
+      - certs:${CERTS_DIR}
+    networks:
+      - 'local_esnet'
+    cap_add:
+      - AUDIT_CONTROL
+      - AUDIT_READ
+    depends_on:
+      - wait_until_ready
+
   kibana:
     image: docker.elastic.co/kibana/kibana:${VER}
     container_name: kibana

@@ -41,3 +41,15 @@ instances:
       - "localhost"
     ip:
       - 127.0.0.1
+  - name: "auditbeat_setup"
+    dns:
+      - "auditbeat_setup"
+      - "localhost"
+    ip:
+      - 127.0.0.1
+  - name: "auditbeat"
+    dns:
+      - "auditbeat"
+      - "localhost"
+    ip:
+      - 127.0.0.1

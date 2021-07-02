@@ -8,6 +8,7 @@ filebeat.inputs:
   paths:
     - /var/example/*.cef
   fields:
+    cef_logs: file
  
 filebeat.config:
   modules:
@@ -49,9 +50,9 @@ output.elasticsearch:
   indices: 
     - index: "filebeat-%{[event.module]}" 
       when.equals.event.module: "nginx"
-    - index: "filebeat-corelight"
+    - index: "filebeat-json"
       when.has_fields: ['fields.json_logs']
-    - index: "filebeat-inquest"
+    - index: "filebeat-cef"
       when.has_fields: ['fields.cef_logs']
 
 processors:
