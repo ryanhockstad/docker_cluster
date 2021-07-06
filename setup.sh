@@ -5,7 +5,8 @@ export $(xargs <.env)
 
 if  ! docker volume ls | grep -q es_certs
 then
-  cd make_certs
+  cp .env initialize/.env
+  cd initialize
   docker-compose up
   cd ..
 fi
@@ -20,5 +21,8 @@ until curl --cacert ./ca.crt -s -u elastic:$ELASTIC_PASSWORD https://localhost:9
 do
   sleep 0.1
 done
-docker-compose -f docker.setup.yml up -d
+
+sleep 10
+docker-compose -f docker.setup.yml -p setup up -d
+
 rm ca.crt

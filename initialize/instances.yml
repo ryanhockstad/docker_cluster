@@ -50,6 +50,3 @@ instances:
   - name: "auditbeat"
     dns:
       - "auditbeat"
-      - "localhost"
-    ip:
-      - 127.0.0.1

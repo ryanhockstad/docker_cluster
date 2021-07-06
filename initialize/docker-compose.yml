@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  create_certs:
+    container_name: create_certs
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    command: ./bindmount/make_certs.sh
+    user: "0"
+    working_dir: /usr/share/elasticsearch
+    volumes: 
+    - 'certs:/certs' 
+    - './instances.yml:/usr/share/elasticsearch/bindmount/instances.yml'
+    - './make_certs.sh:/usr/share/elasticsearch/bindmount/make_certs.sh'
+  
+  create_kibana_keystore:
+    image: docker.elastic.co/kibana/kibana:${VER}
+    volumes:
+      - ../config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ../config/kibana/encryption_keys.yml:/usr/share/kibana/encryption_keys.yml
+      - ./initialize_kibana.sh:/usr/share/kibana/bindmount/initialize_kibana.sh
+      - kibana_config:/usr/share/kibana/config
+    working_dir: /usr/share/kibana
+    command: ./bindmount/initialize_kibana.sh
+
+
+volumes: 
+  certs:
+  kibana_config:

@@ -17,4 +17,8 @@ server:
   #   key:
   #   keyPassphrase:
 
+xpack:
+  security.enabled: true
+  encryptedSavedObjects.encryptionKey: "asuygp98weysldkjbodiwerqpouwheflajewurhoq3uehfoisfdj0vijwoe"
+
 enterpriseSearch.host: 'http://enterprise_search:3002'

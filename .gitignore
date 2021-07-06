@@ -1,4 +1,5 @@
 example_data/sincedb*
 example_data/data/*
+initialize/.env
 .env
 ca.crt

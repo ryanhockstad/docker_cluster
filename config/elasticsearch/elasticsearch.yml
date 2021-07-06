@@ -8,6 +8,7 @@ cluster.initial_master_nodes: [ "node-1" ]
 # xpack.security.http.ssl.verification_mode: certificate
 xpack:
   security:
+    enabled: true
     transport:
       ssl:
         enabled: true
