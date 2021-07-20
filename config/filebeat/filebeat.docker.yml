@@ -9,6 +9,11 @@ filebeat.inputs:
     - /var/example/*.cef
   fields:
     cef_logs: file
+- type: log
+  paths:
+    - /var/example/*.csv
+  fields:
+    csv_logs: file
  
 filebeat.config:
   modules:
@@ -54,8 +59,35 @@ output.elasticsearch:
       when.has_fields: ['fields.json_logs']
     - index: "filebeat-cef"
       when.has_fields: ['fields.cef_logs']
+    - index: "filebeat-csv"
+      when.has_fields: ['fields.csv_logs']
 
 processors:
+  - if:
+      has_fields: ["fields.csv_logs"]
+    then:
+      - decode_csv_fields:
+          fields:
+            message: decoded.csv
+          separator: ","
+          ignore_missing: true
+          overwrite_keys: true
+          trim_leading_space: true
+          fail_on_error: true
+      - extract_array:
+          field: decoded.csv
+          mappings: 
+            csv.id: 0
+            csv.location_id: 1
+            csv.organization_id: 2
+            csv.service_id: 3
+            csv.name: 4
+            csv.title: 5
+            csv.email: 6
+            csv.department: 7
+      - drop_fields:
+          fields: ["decoded.csv"]
+          ignore_missing: false
   - decode_json_fields:
       fields: ["message"]
       process_array: false

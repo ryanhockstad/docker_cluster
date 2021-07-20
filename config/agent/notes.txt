@@ -1,0 +1,4 @@
+Upon initialization, an elasticsearch-service-token needs to be created to start the fleet service and enroll agents.
+
+An API can be used to do this, but you must change the user to 'elasticsearch' (`su elasticsearch`) for the token to work.
+* bin/elasticsearch-service-tokens

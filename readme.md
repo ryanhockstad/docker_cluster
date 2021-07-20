@@ -1,10 +1,9 @@
 What do you need?
-* Docker.  You should probably give it like 16 gigs of ram because we're running a 3 node cluster with logstash, filebeat, kibana and enterprise search.  
+* Docker.  You should probably give it like 16 gigs of ram because we're running a 3 node cluster with logstash, filebeat, kibana and enterprise search, and auditbeat.  
 
 How to get this stuff running:
 
  * Step 0: Copy the example.env to .env. 
- Change the name of the last line to your public IP if you want to access enterprise search from the World Wide Web.
 
  * Step 1: run `./setup.sh`
 
@@ -19,6 +18,8 @@ How to get this stuff running:
 
 
 TODO stuff
+* Add elastic agent
+* add APM
 * PKI for kibana
 Get CN from kibana certificate to use with Role Mapping for RBAC:
 `openssl x509 -noout -subject -in certs/kibana/kibana.crt`

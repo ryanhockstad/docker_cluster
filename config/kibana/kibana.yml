@@ -10,7 +10,7 @@ elasticsearch:
 
 server:
   name: kibana
-  host: "0"
+  host: 0.0.0.0
   # ssl:
   #   enabled: true
   #   certificate:
@@ -19,6 +19,7 @@ server:
 
 xpack:
   security.enabled: true
-  encryptedSavedObjects.encryptionKey: "asuygp98weysldkjbodiwerqpouwheflajewurhoq3uehfoisfdj0vijwoe"
 
 enterpriseSearch.host: 'http://enterprise_search:3002'
+
+xpack.fleet.agents.elasticsearch.host: https://node-1:9200

@@ -1,4 +1,5 @@
 version: '3'
+
 services: 
   auditbeat_setup:
     image: docker.elastic.co/beats/auditbeat:${VER}
@@ -9,7 +10,7 @@ services:
       AUDITBEAT_KEY_PASSPHRASE: ${AUDITBEAT_KEY_PASSPHRASE}
     volumes:
       - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
-      - certs:${CERTS_DIR}
+      - es_certs:${CERTS_DIR}
     networks:
       - 'local_esnet'
     cap_add:
@@ -18,7 +19,8 @@ services:
     command: setup
 
 volumes:
-  certs:
+  es_certs:
+    external: true
 
 networks:
   local_esnet:

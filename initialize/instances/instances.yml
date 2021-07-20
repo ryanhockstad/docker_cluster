@@ -4,49 +4,31 @@ instances:
       - "node-1"
       - "localhost"
     ip:
-      - 127.0.0.1
+      - 172.22.1.1
   - name: "node-2"
     dns:
       - "node-2"
       - "localhost"
     ip:
-      - 127.0.0.1
+      - 172.22.1.2
   - name: "node-3"
     dns:
       - "node-3"
       - "localhost"
     ip:
-      - 127.0.0.1
+      - 172.22.1.3 #127.0.0.1
   - name: "kibana"
     dns:
       - "kibana"
-      - "localhost"
-    ip:
-      - 127.0.0.1
-  - name: "logstash"
-    dns:
-      - "logstash"
-      - "localhost"
-    ip:
-      - 127.0.0.1
   - name: "filebeat"
     dns:
       - "filebeat"
-      - "localhost"
-    ip:
-      - 127.0.0.1
   - name: "enterprise_search"
     dns:
       - "enterprise_search"
-      - "localhost"
-    ip:
-      - 127.0.0.1
   - name: "auditbeat_setup"
     dns:
       - "auditbeat_setup"
-      - "localhost"
-    ip:
-      - 127.0.0.1
   - name: "auditbeat"
     dns:
       - "auditbeat"

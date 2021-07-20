@@ -1,5 +1,7 @@
-example_data/sincedb*
-example_data/data/*
 initialize/.env
 .env
-ca.crt
+
+example_data/sincedb*
+example_data/data/*
+
+kibana/config/encryption_keys.yml

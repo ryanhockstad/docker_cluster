@@ -12,7 +12,7 @@ xpack:
     transport:
       ssl:
         enabled: true
-        verification_mode: certificate
+        verification_mode: full #certificate
         certificate_authorities: [certs/ca/ca.crt]
         # key_passphrase: password
         # certificate: in docker-compose
@@ -21,7 +21,7 @@ xpack:
       ssl:
         enabled: true
         certificate_authorities: [certs/ca/ca.crt]
-        client_authentication: optional #required
+        client_authentication: required #optional
         # key_passphrase: password
         # certificate: in docker-compose
         # key: in docker-compose

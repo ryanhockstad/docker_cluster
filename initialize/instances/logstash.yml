@@ -1,0 +1,11 @@
+instances:
+  - name: "logstash" 
+    dns: 
+      - "logstash"
+
+  # - name: "logstash"
+  #   dns:
+  #     - "logstash"
+  #     - "localhost"
+  #   ip:
+  #     - 127.0.0.1
