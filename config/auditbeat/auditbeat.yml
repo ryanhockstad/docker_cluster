@@ -22,6 +22,8 @@ output.elasticsearch:
     key_passphrase: ${AUDITBEAT_KEY_PASSPHRASE}
 
 setup:
+  dashboards.enabled: true
+  template.enabled: true
   ilm.overwrite: true
   kibana:
     host: https://kibana:5601

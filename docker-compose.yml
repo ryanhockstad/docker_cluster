@@ -24,7 +24,7 @@ services:
       - local_es1_data:/usr/share/elasticsearch/data
       - certs:${CERTS_DIR}
     networks:
-      local_esnet:
+      es_net:
         ipv4_address: 172.22.1.1
     healthcheck:
       test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
@@ -53,11 +53,16 @@ services:
       - certs:${CERTS_DIR}
       - local_es2_data:/usr/share/elasticsearch/data
     networks:
-      local_esnet:
+      es_net:
         ipv4_address: 172.22.1.2
   
   node-3:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    # image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    build:
+      context: ./config/elasticsearch
+      args: 
+        VER: ${VER}
+        PASS: ${ELASTIC_PASSWORD}
     hostname: node-3
     container_name: node-3
     environment:
@@ -76,75 +81,19 @@ services:
       - ./config/elasticsearch/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
       - certs:${CERTS_DIR}
     networks:
-      local_esnet:
+      es_net:
         ipv4_address: 172.22.1.3
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:${VER}
-    container_name: logstash
-    environment:
-      HTTP_HOST: 0.0.0.0
-      LOG_PASS: ${LOGSTASH_KEY_PASSPHRASE}
-      CERTS_DIR: ${CERTS_DIR}
-    volumes:
-      - ./config/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
-      - ./config/logstash/pipelines:/usr/share/logstash/pipelines
-      - ./config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./example_data:/usr/share/logstash/logs
-      - certs:${CERTS_DIR}
-    networks:
-      - 'local_esnet'
-    depends_on: 
-      - wait_until_ready
-
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:${VER}
-    container_name: filebeat
-    user: root
-    environment:
-      EXAMPLE_ENV_VAR: ${EXAMPLE_PATH}
-    volumes:
-      - ./config/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./config/filebeat/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
-      - ./example_data/data:/usr/share/filebeat/data/
-      - ./example_data:/var/example
-      - nginx_logs:/var/log/nginx:ro
-      - certs:${CERTS_DIR}
-      # - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      # - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - 'local_esnet'
-    depends_on: 
-      - wait_until_ready
-    # command: setup --dashboards
-
-  auditbeat:
-    image: docker.elastic.co/beats/auditbeat:${VER}
-    container_name: auditbeat
-    user: root
-    pid: host
-    environment:
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
-      CERTS_DIR: ${CERTS_DIR}
-      AUDITBEAT_KEY_PASSPHRASE: ${AUDITBEAT_KEY_PASSPHRASE}
-    volumes:
-      - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
-      - certs:${CERTS_DIR}
-    networks:
-      - 'local_esnet'
-    cap_add:
-      - AUDIT_CONTROL
-      - AUDIT_READ
-    depends_on:
-      - wait_until_ready
+  wait_until_es_ready:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    command: /usr/bin/true
+    depends_on: {"node-1": {"condition": "service_healthy"}}
 
   kibana:
-    # image: docker.elastic.co/kibana/kibana:${VER}
     build:
       context: ./config/kibana
       args: 
         VER: ${VER}
-        PASS: ${ELASTIC_PASSWORD}
     hostname: kibana
     container_name: kibana
     environment: 
@@ -166,24 +115,98 @@ services:
       - kibana_config:/usr/share/kibana/config
       - certs:${CERTS_DIR}
     networks: 
-      - 'local_esnet'
+      - 'es_net'
     depends_on: 
-      - wait_until_ready
-  
-  wait_until_ready:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
-    command: /usr/bin/true
-    depends_on: {"node-1": {"condition": "service_healthy"}}
+      - wait_until_es_ready
+    healthcheck:
+      test: curl --cacert $CERTS_DIR/ca/ca.crt -s https://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  nginx:
-    image: nginx
-    container_name: nginx
-    ports: [8080:80]
+  wait_until_kib_ready:
+    image: docker.elastic.co/kibana/kibana:${VER}
+    command: /usr/bin/true
+    depends_on: {"kibana": {"condition": "service_healthy"}}
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${VER}
+    container_name: logstash
+    environment:
+      HTTP_HOST: 0.0.0.0
+      LOG_PASS: ${LOGSTASH_KEY_PASSPHRASE}
+      CERTS_DIR: ${CERTS_DIR}
     volumes:
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - nginx_logs:/var/log/nginx/
+      - ./config/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./config/logstash/pipelines:/usr/share/logstash/pipelines
+      - ./config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./example_data:/usr/share/logstash/logs
+      - certs:${CERTS_DIR}
+    networks:
+      - 'es_net'
+    depends_on: 
+      - wait_until_kib_ready
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${VER}
+    container_name: filebeat
+    user: root
+    environment:
+      EXAMPLE_ENV_VAR: ${EXAMPLE_PATH}
+    volumes:
+      - ./config/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./config/filebeat/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
+      - ./example_data/data:/usr/share/filebeat/data/
+      - ./example_data:/var/example
+      - nginx_logs:/var/log/nginx:ro
+      - certs:${CERTS_DIR}
+      # - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - 'es_net'
+    depends_on: 
+      - wait_until_kib_ready
+    # command: setup --dashboards
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:${VER}
+    container_name: metricbeat
+    user: root
+    environment:
+      CERTS_DIR: ${CERTS_DIR}
+    volumes:
+      - ./config/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:${CERTS_DIR}
+    networks:
+      - 'es_net'
+    depends_on: 
+      - wait_until_kib_ready
+
+  auditbeat:
+    image: docker.elastic.co/beats/auditbeat:${VER}
+    container_name: auditbeat
+    user: root
+    pid: host
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      CERTS_DIR: ${CERTS_DIR}
+      AUDITBEAT_KEY_PASSPHRASE: ${AUDITBEAT_KEY_PASSPHRASE}
+    volumes:
+      - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
+      - certs:${CERTS_DIR}
+    networks:
+      - 'es_net'
+    cap_add:
+      - AUDIT_CONTROL
+      - AUDIT_READ
     depends_on:
-      - wait_until_ready
+      - wait_until_kib_ready
+
+  # apm_server:
+  #   image: docker.elastic.co/apm/apm-server:${VER}
+  #   depends_on:
+  #     - wait_until_es_ready
 
   ## Enterprise search takes a bit to spin up, so I usually leave it commented out.
   # enterprise_search:
@@ -210,12 +233,11 @@ services:
   #     - certs:/certs
   #   ports:
   #     - 3002:3002
-  #   networks:
-  #       - local_esnet
   #   restart: on-failure
   #   depends_on:
-  #       - wait_until_ready
+  #       - wait_until_es_ready
 
+# One Elastic Agent acts as a server.  Not sure if we need another agent on the host with the server agent
   # agent:
   #   image: docker.elastic.co/beats/elastic-agent:${VER}
   #   container_name: agent
@@ -226,6 +248,22 @@ services:
   #     FLEET_ENROLLMENT_TOKEN: "my_token"
   #   volumes:
   #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports: [8080:80]
+    labels:
+      co.elastic.metrics/module: nginx
+      co.elastic.metrics/metricsets: stubstatus
+      co.elastic.metrics/hosts: http://nginx:80/nginx_status
+      co.elastic.metrics/period: 10s
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - nginx_logs:/var/log/nginx/
+    networks: 
+      - 'es_net'
 
 volumes:
   local_es1_data:
@@ -234,5 +272,5 @@ volumes:
   certs:
   kibana_config:
 networks:
-  local_esnet:
+  es_net:
     external: true

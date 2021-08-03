@@ -1,1 +1,5 @@
-TODO: Start one elasticsearch node (maybe node 3) using a dockerfile that loads the ILM and index template so logstash uses the ILM correctly.
+ARG VER
+ARG PASS
+FROM docker.elastic.co/elasticsearch/elasticsearch:${VER}
+# USER elasticsearch
+# RUN bin/elasticsearch-service-tokens create elastic/fleet-server fleet-token

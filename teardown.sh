@@ -1,5 +1,6 @@
 docker-compose down --remove-orphans
-docker container rm auditbeat_setup agent
+docker container rm auditbeat_setup metricbeat_setup
+docker network rm es_net
 
 rm -rf example_data/data
 rm -rf example_data/sincedb

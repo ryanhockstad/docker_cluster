@@ -1,5 +1,4 @@
 ARG VER
-ARG PASS
 FROM docker.elastic.co/kibana/kibana:${VER}
 USER kibana
 COPY kibana.yml /usr/share/kibana/config/kibana.yml
