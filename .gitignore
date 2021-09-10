@@ -3,5 +3,9 @@ initialize/.env
 
 example_data/sincedb*
 example_data/data/*
+node-1/
+
 
 kibana/config/encryption_keys.yml
+
+config/agent/service_account_token.txt

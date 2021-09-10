@@ -57,12 +57,12 @@ services:
         ipv4_address: 172.22.1.2
   
   node-3:
-    # image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
-    build:
-      context: ./config/elasticsearch
-      args: 
-        VER: ${VER}
-        PASS: ${ELASTIC_PASSWORD}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VER}
+    # build:
+    #   context: ./config/elasticsearch
+    #   args: 
+    #     VER: ${VER}
+    #     PASS: ${ELASTIC_PASSWORD}
     hostname: node-3
     container_name: node-3
     environment:
@@ -79,7 +79,11 @@ services:
     volumes:
       - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./config/elasticsearch/unicast_hosts.txt:/usr/share/elasticsearch/config/unicast_hosts.txt
+      - ./config/agent/service_account_token.txt:/usr/share/elasticsearch/config/service_account_token.txt
+      - ./config/elasticsearch/entrypoint.sh:/usr/share/elasticsearch/entrypoint.sh
       - certs:${CERTS_DIR}
+    # entrypoint:
+    #   /usr/share/elasticsearch/entrypoint.sh
     networks:
       es_net:
         ipv4_address: 172.22.1.3
@@ -133,7 +137,7 @@ services:
     image: docker.elastic.co/logstash/logstash:${VER}
     container_name: logstash
     environment:
-      HTTP_HOST: 0.0.0.0
+      # HTTP_HOST: 0.0.0.0
       LOG_PASS: ${LOGSTASH_KEY_PASSPHRASE}
       CERTS_DIR: ${CERTS_DIR}
     volumes:
@@ -155,7 +159,7 @@ services:
       EXAMPLE_ENV_VAR: ${EXAMPLE_PATH}
     volumes:
       - ./config/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./config/filebeat/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
+      - ./config/filebeat/modules.d:/usr/share/filebeat/modules.d
       - ./example_data/data:/usr/share/filebeat/data/
       - ./example_data:/var/example
       - nginx_logs:/var/log/nginx:ro
@@ -203,11 +207,6 @@ services:
     depends_on:
       - wait_until_kib_ready
 
-  # apm_server:
-  #   image: docker.elastic.co/apm/apm-server:${VER}
-  #   depends_on:
-  #     - wait_until_es_ready
-
   ## Enterprise search takes a bit to spin up, so I usually leave it commented out.
   # enterprise_search:
   #   image: docker.elastic.co/enterprise-search/enterprise-search:${VER}
@@ -237,18 +236,6 @@ services:
   #   depends_on:
   #       - wait_until_es_ready
 
-# One Elastic Agent acts as a server.  Not sure if we need another agent on the host with the server agent
-  # agent:
-  #   image: docker.elastic.co/beats/elastic-agent:${VER}
-  #   container_name: agent
-  #   environment:
-  #     FLEET_ENROLL: 1
-  #     FLEET_ENROLL_INSECURE: 1
-  #     KIBANA_HOST: "https://kibana:5601"
-  #     FLEET_ENROLLMENT_TOKEN: "my_token"
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  
   nginx:
     image: nginx
     container_name: nginx

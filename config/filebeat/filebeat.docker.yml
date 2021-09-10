@@ -39,7 +39,8 @@ setup.kibana:
 
 
 setup.ilm.enabled: false
-setup.template.enabled: false
+setup.dashboards.enabled: true
+setup.template.enabled: true
 
 output.elasticsearch:
   hosts: ["node-1:9200"]
@@ -55,6 +56,8 @@ output.elasticsearch:
   indices: 
     - index: "filebeat-%{[event.module]}" 
       when.equals.event.module: "nginx"
+    - index: "filebeat-%{[event.module]}" 
+      when.equals.event.module: "aws"
     - index: "filebeat-json"
       when.has_fields: ['fields.json_logs']
     - index: "filebeat-cef"

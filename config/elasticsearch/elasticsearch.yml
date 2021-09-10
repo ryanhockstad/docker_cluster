@@ -3,6 +3,8 @@ discovery.seed_providers: file
 network:
   host: "0"
 
+# repo: /path/to/snapshot/repo
+
 cluster.initial_master_nodes: [ "node-1" ]
 
 xpack:
