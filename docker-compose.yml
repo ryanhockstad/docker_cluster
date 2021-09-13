@@ -156,6 +156,7 @@ services:
     container_name: filebeat
     user: root
     environment:
+      AK: ${AK}
       SAK: ${SAK}
     volumes:
       - ./config/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
