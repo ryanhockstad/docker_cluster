@@ -4,6 +4,11 @@
     var.queue_url: "https://sqs.us-east-1.amazonaws.com/866358680518/filebeatQueue"
     var.access_key_id: ${AK}
     var.secret_access_key: ${SAK}
+  cloudtrail.enabled: false
+  cloudwatch.enabled: false
+  ec2.enabled: false
+  elb.enabled: false
+  vpcflow.enabled: false
 
 # - module: aws
 #   s3access:
